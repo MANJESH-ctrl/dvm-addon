@@ -7,6 +7,9 @@ CLASS zcl_dvm_kb DEFINITION
     "! Writes the shipped knowledge base entries (safe to run repeatedly)
     CLASS-METHODS seed.
 
+    "! Default retention days + blocker rules (example policy)
+    CLASS-METHODS seed_policies.
+
     METHODS constructor.
 
     "! Returns the KB entry for a table (exact name first, then wildcard patterns)
@@ -157,8 +160,57 @@ CLASS zcl_dvm_kb IMPLEMENTATION.
 
     MODIFY zdvm_kb FROM TABLE @lt_kb.
     COMMIT WORK.
+    seed_policies( ).
   ENDMETHOD.
 
+  METHOD seed_policies.
+    " Example retention defaults. In the product the customer adjusts these.
+    TYPES: BEGIN OF ty_pol,
+             table_name  TYPE zdvm_kb-table_name,
+             ret_days    TYPE i,
+             blocker_sql TYPE zdvm_kb-blocker_sql,
+           END OF ty_pol,
+           tt_pol TYPE STANDARD TABLE OF ty_pol WITH EMPTY KEY.
+
+    " SAP rule: log may not be deleted before its expiry date
+    CONSTANTS lc_bal_block TYPE string
+      VALUE `DEL_BEFORE = 'X' AND ALDATE_DEL > '{TODAY}'`.
+
+    DATA(lt_pol) = VALUE tt_pol(
+      ( table_name = 'BALHDR'    ret_days = 90   blocker_sql = lc_bal_block )
+      ( table_name = 'BALDAT'    ret_days = 90   blocker_sql = lc_bal_block )
+      ( table_name = 'DBTABLOG'  ret_days = 730 )
+      ( table_name = 'APQI'      ret_days = 30 )
+      ( table_name = 'APQD'      ret_days = 30 )
+      ( table_name = 'SNAP'      ret_days = 14 )
+      ( table_name = 'TBTCO'     ret_days = 30 )
+      ( table_name = 'EDIDC'     ret_days = 180 )
+      ( table_name = 'EDID4'     ret_days = 180 )
+      ( table_name = 'EDIDS'     ret_days = 180 )
+      ( table_name = 'CDHDR'     ret_days = 1825 )
+      ( table_name = 'CDPOS'     ret_days = 1825 )
+      ( table_name = 'SWWWIHEAD' ret_days = 365 )
+      ( table_name = 'ACDOCA'    ret_days = 3650 )
+      ( table_name = 'BKPF'      ret_days = 3650 )
+      ( table_name = 'BSEG'      ret_days = 3650 )
+      ( table_name = 'MATDOC'    ret_days = 1825 )
+      ( table_name = 'VBAK'      ret_days = 1825 )
+      ( table_name = 'VBAP'      ret_days = 1825 )
+      ( table_name = 'VBRK'      ret_days = 1825 )
+      ( table_name = 'VBRP'      ret_days = 1825 )
+      ( table_name = 'LIKP'      ret_days = 1825 )
+      ( table_name = 'LIPS'      ret_days = 1825 )
+      ( table_name = 'EKKO'      ret_days = 1825 )
+      ( table_name = 'EKPO'      ret_days = 1825 ) ).
+
+    LOOP AT lt_pol INTO DATA(ls_pol).
+      UPDATE zdvm_kb
+        SET ret_days    = @ls_pol-ret_days,
+            blocker_sql = @ls_pol-blocker_sql
+        WHERE table_name = @ls_pol-table_name.
+    ENDLOOP.
+    COMMIT WORK.
+  ENDMETHOD.
 
   METHOD constructor.
     SELECT * FROM zdvm_kb INTO TABLE @DATA(lt_all).
