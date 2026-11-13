@@ -1,0 +1,9 @@
+{
+  "BASEINFO": {
+    "FROM": [
+      "ZI_DVM_LATEST",
+      "ZDVM_REC",
+      "ZDVM_SNAP"
+    ]
+  }
+}

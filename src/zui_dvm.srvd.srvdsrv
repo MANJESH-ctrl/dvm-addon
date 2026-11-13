@@ -1,0 +1,9 @@
+@EndUserText.label: 'DVM UI service'
+define service ZUI_DVM {
+  expose ZC_DVM_SUMMARY        as BusinessCase;
+  expose ZC_DVM_ACTION         as CleanupAction;
+  expose ZC_DVM_RECOMMENDATION as Recommendation;
+  expose ZC_DVM_TABLE          as DatabaseTable;
+  expose ZC_DVM_VERIFY_ACTION  as PredictedVsActual;
+  expose ZC_DVM_VERIFY         as PredictedVsActualTable;
+}
